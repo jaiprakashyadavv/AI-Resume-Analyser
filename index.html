@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ResumeAI - Beat the ATS. Land the Interview.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              200: '#b9dffe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#0f172a', // Deep slate primary
+              950: '#020617',
+            }
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'shimmer': 'shimmer 2s linear infinite',
+          },
+          keyframes: {
+            shimmer: {
+              '0%': { backgroundPosition: '-200% 0' },
+              '100%': { backgroundPosition: '200% 0' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- React & Babel Standalone for direct in-browser execution -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin-slow {
+      animation: spin-slow 12s linear infinite;
+    }
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 selection:bg-blue-600 selection:text-white min-h-screen flex flex-col">
+  <div id="root"></div>
+
+  <!-- React Application Script -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // --- Lucide Icons as Crisp SVG Components ---
+    const Icon = ({ path, className = "w-5 h-5", ...props }) => (
+      <svg
+        className={className}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        {...props}
+      >
+        {path}
+      </svg>
+    );
+
+    const SparklesIcon = (props) => (
+      <Icon {...props} path={
+        <>
+          <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+          <path d="M5 3v4"/>
+          <path d="M19 17v4"/>
+          <path d="M3 5h4"/>
+          <path d="M17 19h4"/>
+        </>
+      }/>
+    );
+
+    const UploadCloudIcon = (props) => (
+      <Icon {...props} path={
+        <>
+          <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/>
+          <path d="M12 12v9"/>
+          <path d="m16 16-4-4-4 4"/>
+        </>
+      }/>
+    );
+
+    const FileTextIcon = (props) => (
+      <Icon {...props} path={
+        <>
+          <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/>
+          <path d="M14 2v4a2 2 0 0 0 2 2h4"/>
+          <path d="M10 9H8"/>
+          <path d="M16 13H8"/>
+          <path d="M16 17H8"/>
+        </>
+      }/>
+    );
+
+    const CheckCircleIcon = (props) => (
+      <Icon {...props} path={
+        <>
+          <circle cx="12" cy="12" r="10"/>
+          <path d="m9 12 2 2 4-4"/>
+        </>
+      }/>
+    );
+
+    const XCircleIcon = (props) => (
+      <Icon {...props} path={
+        <>
+          <circle cx="12" cy="12" r="10"/>
+          <path d="m15 9-6 6"/>
+          <path d="m9 9 6 6"/>
+        </>
+      }/>
+    );
+
+    const AlertCircleIcon = (props) => (
+      <Icon {...props} path={
+        <>
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </>
+      }/>
+    );
+
+    const CheckIcon = (props) => (
+      <Icon {...props} path={<polyline points="20 6 9 17 4 12"/>}/>
+    );
+
+    const XIcon = (props) => (
+      <Icon {...props} path={
+        <>
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </>
+      }/>
+    );
+
+    const CopyIcon = (props) => (
+      <Icon {...props} path={
+        <>
+          <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+          <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+        </>
+      }/>
+    );
+
+    const ArrowRightIcon = (props) => (
+      <Icon {...props} path={
+        <>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+          <polyline points="12 5 19 12 12 19"/>
+        </>
+      }/>
+    );
+
+    const ShieldCheckIcon = (props) => (
+      <Icon {...props} path={
+        <>
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
+          <path d="m9 12 2 2 4-4"/>
+        </>
+      }/>
+    );
+
+    const WandIcon = (props) => (
+      <Icon {...props} path={
+        <>
+          <path d="m19 2 2 2-2 2-2-2Z"/>
+          <path d="m5 16 2 2-2 2-2-2Z"/>
+          <path d="m15 4-1 1"/>
+          <path d="m14 7 3-3"/>
+          <path d="M9.5 9.5 3 16l5 5 6.5-6.5"/>
+          <path d="m14 14 6-6"/>
+        </>
+      }/>
+    );
+
+    const DownloadIcon = (props) => (
+      <Icon {...props} path={
+        <>
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </>
+      }/>
+    );
+
+    const RefreshCwIcon = (props) => (
+      <Icon {...props} path={
+        <>
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+          <path d="M21 3v5h-5"/>
+          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+          <path d="M8 16H3v5"/>
+        </>
+      }/>
+    );
+
+    const StarIcon = (props) => (
+      <Icon {...props} path={
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+      }/>
+    );
+
+    const MenuIcon = (props) => (
+      <Icon {...props} path={
+        <>
+          <line x1="4" y1="12" x2="20" y2="12"/>
+          <line x1="4" y1="6" x2="20" y2="6"/>
+          <line x1="4" y1="18" x2="20" y2="18"/>
+        </>
+      }/>
+    );
+
+    const InfoIcon = (props) => (
+      <Icon {...props} path={
+        <>
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </>
+      }/>
+    );
+
+    const Trash2Icon = (props) => (
+      <Icon {...props} path={
+        <>
+          <path d="M3 6h18"/>
+          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+          <line x1="10" y1="11" x2="10" y2="17"/>
+          <line x1="14" y1="11" x2="14" y2="17"/>
+        </>
+      }/>
+    );
+
+    // --- Mock Data & Presets ---
+    const SAMPLE_RESUME = {
+      name: "Alex_Rivera_Senior_Frontend_Engineer.pdf",
+      size: "184 KB",
+      pages: 2,
+      lastModified: "Updated 2 days ago",
+      text: `ALEX RIVERA
+Senior Frontend Engineer | San Francisco, CA | alex.rivera@example.com
+
+SUMMARY
+Passionate Senior Frontend Developer with 6+ years of experience building scalable, performant web applications with React, TypeScript, and modern JavaScript ecosystem. Proven track record leading UI architecture and mentoring junior developers.
+
+EXPERIENCE
+Senior Frontend Developer - TechNova Labs (2021 - Present)
+- Led team of developers building responsive dashboard web applications using React, Next.js, and Redux Toolkit.
+- Built reusable component library using Tailwind CSS and Storybook, increasing frontend team velocity.
+- Improved application performance by optimizing re-renders and code-splitting, speeding up load times.
+- Collaborated with product designers and backend engineers to define RESTful and GraphQL APIs.
+
+Frontend Developer - CloudScale Systems (2018 - 2021)
+- Developed customer-facing web portals with React, TypeScript, and HTML5/CSS3.
+- Implemented unit and integration test suites using Jest and React Testing Library with 85% coverage.
+- Participated in daily Agile standups, sprint planning, and bi-weekly retrospectives.
+
+SKILLS
+Languages: TypeScript, JavaScript (ES6+), HTML5, CSS3, SQL
+Frameworks & Libraries: React, Next.js, Redux, Tailwind CSS, Jest, React Testing Library
+Tools: Git, GitHub, Webpack, Vite, Figma, Agile / Scrum`
+    };
+
+    const SAMPLE_JOB_DESC = `Position: Senior Frontend Engineer (Core Platform)
+Company: Stripe / Fintech Inc.
+Location: Remote (US / Canada)
+
+About the Role:
+We are looking for an exceptional Senior Frontend Engineer to join our Core Platform team. In this role, you will architect enterprise-grade web applications, champion web performance, and collaborate with cross-functional teams to build intuitive, mission-critical financial interfaces.
+
+Requirements & Qualifications:
+- 5+ years of production experience building modern web applications with React and TypeScript.
+- Deep expertise in state management (Redux, Zustand, or React Query) and responsive UI styling with Tailwind CSS.
+- Strong knowledge of modern build tooling (Vite, Webpack), CI/CD pipelines, and automated testing (Jest, Cypress).
+- Experience containerizing web apps with Docker and deploying to AWS (S3, CloudFront, ECS).
+- Understanding of micro-frontend architecture and GraphQL API consumption is a strong plus.
+- Proven ability to quantify engineering impact and mentor peers in an Agile / Scrum environment.`;
+
+    // --- Main Application Component ---
+    function App() {
+      // Input states
+      const [resumeFile, setResumeFile] = useState(SAMPLE_RESUME);
+      const [jobDescription, setJobDescription] = useState(SAMPLE_JOB_DESC);
+      const [isDragging, setIsDragging] = useState(false);
+      
+      // UI Flow states
+      const [isAnalyzing, setIsAnalyzing] = useState(false);
+      const [analyzeProgress, setAnalyzeProgress] = useState(0);
+      const [statusStep, setStatusStep] = useState("");
+      const [showResults, setShowResults] = useState(true); // default true for immediate preview as requested
+      const [activeTab, setActiveTab] = useState("overview"); // "overview" | "keywords" | "formatting" | "feedback"
+      
+      // Toast notification state
+      const [toast, setToast] = useState(null);
+
+      // Modal states
+      const [activeModal, setActiveModal] = useState(null); // 'howItWorks' | 'pricing' | 'signIn' | 'export' | null
+      const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+      const fileInputRef = useRef(null);
+      const resultsRef = useRef(null);
+
+      const showToast = (message, type = "success") => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3500);
+      };
+
+      // Handle Drag & Drop
+      const handleDragOver = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+      };
+
+      const handleDragLeave = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+      };
+
+      const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          const file = e.dataTransfer.files[0];
+          handleLoadedFile(file);
+        }
+      };
+
+      const handleFileInputChange = (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          const file = e.target.files[0];
+          handleLoadedFile(file);
+        }
+      };
+
+      const handleLoadedFile = (file) => {
+        const sizeInKB = Math.round(file.size / 1024);
+        setResumeFile({
+          name: file.name,
+          size: `${sizeInKB} KB`,
+          pages: 2,
+          lastModified: "Uploaded just now",
+          text: `[Parsed Content from ${file.name}]`
+        });
+        showToast(`Uploaded "${file.name}" successfully!`);
+      };
+
+      const removeResume = (e) => {
+        e.stopPropagation();
+        setResumeFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      };
+
+      const loadSampleData = () => {
+        setResumeFile(SAMPLE_RESUME);
+        setJobDescription(SAMPLE_JOB_DESC);
+        showToast("Pre-loaded Senior Frontend Engineer sample data!");
+      };
+
+      // Simulated Analysis Flow
+      const runAnalysis = () => {
+        if (!resumeFile) {
+          showToast("Please upload a resume file first.", "error");
+          return;
+        }
+        if (!jobDescription.trim()) {
+          showToast("Please paste a target job description.", "error");
+          return;
+        }
+
+        setIsAnalyzing(true);
+        setAnalyzeProgress(0);
+        setStatusStep("Reading document structure & formatting rules...");
+
+        const steps = [
+          { progress: 20, text: "Extracting skills, certifications & role history..." },
+          { progress: 45, text: "Scanning 50+ ATS keyword vectors against target job..." },
+          { progress: 70, text: "Benchmarking against Workday, Greenhouse & Lever algorithms..." },
+          { progress: 90, text: "Synthesizing bullet point impact and readability score..." },
+          { progress: 100, text: "Complete! Preparing your ATS Dashboard..." }
+        ];
+
+        let currentStep = 0;
+        const interval = setInterval(() => {
+          if (currentStep < steps.length) {
+            setAnalyzeProgress(steps[currentStep].progress);
+            setStatusStep(steps[currentStep].text);
+            currentStep++;
+          } else {
+            clearInterval(interval);
+            setTimeout(() => {
+              setIsAnalyzing(false);
+              setShowResults(true);
+              showToast("Analysis Complete! 82% ATS Match Score calculated.");
+              if (resultsRef.current) {
+                resultsRef.current.scrollIntoView({ behavior: 'smooth' });
+              }
+            }, 500);
+          }
+        }, 550);
+      };
+
+      const copyBullet = (text, id) => {
+        navigator.clipboard.writeText(text);
+        showToast("Optimized bullet copied to clipboard!");
+      };
+
+      return (
+        <div className="flex-1 flex flex-col font-sans">
+          {/* Toast Notification */}
+          {toast && (
+            <div className="fixed top-5 right-5 z-50 flex items-center gap-3 px-4 py-3 bg-slate-900 text-white rounded-xl shadow-2xl border border-slate-700/80 animate-fade-in transition-all">
+              {toast.type === "error" ? (
+                <AlertCircleIcon className="w-5 h-5 text-rose-400" />
+              ) : (
+                <CheckCircleIcon className="w-5 h-5 text-emerald-400" />
+              )}
+              <span className="text-sm font-medium">{toast.message}</span>
+            </div>
+          )}
+
+          {/* 1. Header / Navigation */}
+          <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-between h-16">
+                {/* Logo */}
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-slate-900 via-blue-900 to-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/10">
+                    <SparklesIcon className="w-5 h-5 text-blue-300" />
+                  </div>
+                  <div>
+                    <span className="text-xl font-black tracking-tight text-slate-900">Resume<span className="text-blue-600">AI</span></span>
+                    <span className="hidden sm:inline-block ml-2 px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-blue-50 text-blue-700 rounded-full border border-blue-200">
+                      ATS v4.2
+                    </span>
+                  </div>
+                </div>
+
+                {/* Desktop Nav Links */}
+                <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
+                  <button 
+                    onClick={() => setActiveModal('howItWorks')}
+                    className="hover:text-blue-600 transition-colors cursor-pointer"
+                  >
+                    How it Works
+                  </button>
+                  <button 
+                    onClick={() => setActiveModal('pricing')}
+                    className="hover:text-blue-600 transition-colors cursor-pointer"
+                  >
+                    Pricing
+                  </button>
+                  <a 
+                    href="#results-section" 
+                    className="hover:text-blue-600 transition-colors"
+                  >
+                    Live Demo Score
+                  </a>
+                </nav>
+
+                {/* Right Actions */}
+                <div className="hidden md:flex items-center gap-3">
+                  <button
+                    onClick={() => setActiveModal('signIn')}
+                    className="px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => {
+                      loadSampleData();
+                      showToast("Loaded sample profile! Click Analyze below.");
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg shadow-sm hover:shadow transition-all cursor-pointer"
+                  >
+                    <SparklesIcon className="w-4 h-4 text-blue-400" />
+                    <span>Try Demo</span>
+                  </button>
+                </div>
+
+                {/* Mobile Menu Button */}
+                <div className="flex md:hidden">
+                  <button
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none"
+                    aria-label="Toggle menu"
+                  >
+                    {mobileMenuOpen ? <XIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Dropdown */}
+            {mobileMenuOpen && (
+              <div className="md:hidden border-b border-slate-200 bg-white px-4 pt-2 pb-4 space-y-2">
+                <button
+                  onClick={() => { setActiveModal('howItWorks'); setMobileMenuOpen(false); }}
+                  className="block w-full text-left px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg"
+                >
+                  How it Works
+                </button>
+                <button
+                  onClick={() => { setActiveModal('pricing'); setMobileMenuOpen(false); }}
+                  className="block w-full text-left px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg"
+                >
+                  Pricing
+                </button>
+                <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
+                  <button
+                    onClick={() => { setActiveModal('signIn'); setMobileMenuOpen(false); }}
+                    className="w-full text-center py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 rounded-lg"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => { loadSampleData(); setMobileMenuOpen(false); }}
+                    className="w-full text-center py-2 text-sm font-semibold text-white bg-slate-900 rounded-lg"
+                  >
+                    Load Sample Data
+                  </button>
+                </div>
+              </div>
+            )}
+          </header>
+
+          <main className="flex-1">
+            {/* 2. Hero Section */}
+            <section className="relative overflow-hidden pt-12 pb-16 lg:pt-20 lg:pb-24 border-b border-slate-200/80 bg-gradient-to-b from-white via-slate-50/50 to-slate-100/70">
+              {/* Subtle background glow */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-tr from-blue-100/40 via-indigo-100/20 to-transparent blur-3xl pointer-events-none -z-10" />
+
+              <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                {/* Pill Badge */}
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200/80 shadow-xs mb-6">
+                  <span className="flex h-2 w-2 rounded-full bg-blue-600 animate-pulse"></span>
+                  <span className="text-xs font-semibold text-blue-900">AI-Powered ATS Algorithm 2026 Ready</span>
+                  <span className="text-slate-300">|</span>
+                  <span className="text-xs text-blue-700 font-medium">Over 240,000+ Resumes Optimized</span>
+                </div>
+
+                {/* Primary Headline */}
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.15] mb-6">
+                  Beat the ATS. <span className="bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-500 bg-clip-text text-transparent">Land the Interview.</span>
+                </h1>
+
+                {/* Subheadline */}
+                <p className="max-w-2xl mx-auto text-lg sm:text-xl text-slate-600 leading-relaxed mb-8">
+                  Upload your resume and the target job description. Our AI analyzes keyword match, formatting, and impact to give you an instant ATS compatibility score.
+                </p>
+
+                {/* Quick Action helper */}
+                <div className="flex flex-wrap items-center justify-center gap-4 text-xs sm:text-sm text-slate-500">
+                  <div className="flex items-center gap-1.5">
+                    <ShieldCheckIcon className="w-4 h-4 text-emerald-600" />
+                    <span>Compatible with Workday, Greenhouse & Lever</span>
+                  </div>
+                  <span className="hidden sm:inline text-slate-300">•</span>
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircleIcon className="w-4 h-4 text-blue-600" />
+                    <span>100% Confidential & Private</span>
+                  </div>
+                  <span className="hidden sm:inline text-slate-300">•</span>
+                  <button 
+                    onClick={loadSampleData} 
+                    className="text-blue-600 font-semibold hover:underline inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Click to load demo profile</span>
+                    <ArrowRightIcon className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            {/* 3. Main Interactive Area (Input Section) */}
+            <section className="py-12 lg:py-16 bg-slate-50">
+              <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                
+                {/* Section Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 pb-4 border-b border-slate-200">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Step 1: Input Profile & Target Role</h2>
+                    <p className="text-sm text-slate-500 mt-1">Provide your current resume and the position requirements for instant comparative audit.</p>
+                  </div>
+                  <div className="mt-3 sm:mt-0 flex items-center gap-2">
+                    <button
+                      onClick={loadSampleData}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors cursor-pointer"
+                      title="Load sample Senior Frontend role and resume"
+                    >
+                      <RefreshCwIcon className="w-3.5 h-3.5" />
+                      <span>Reset to Sample Data</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Two Distinct Input Cards (Side-by-Side on LG, Stacked on Mobile) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+                  
+                  {/* Card 1: Resume Upload */}
+                  <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between transition-all hover:shadow-md">
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-blue-100/70 text-blue-700 flex items-center justify-center font-bold text-sm">
+                            1
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-slate-900">Resume Upload</h3>
+                            <p className="text-xs text-slate-500">PDF, DOCX, or TXT file</p>
+                          </div>
+                        </div>
+
+                        {resumeFile && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-emerald-700 bg-emerald-50 rounded-full border border-emerald-200">
+                            <CheckIcon className="w-3.5 h-3.5" /> Ready for AI
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Dropzone Area */}
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        onChange={handleFileInputChange} 
+                        accept=".pdf,.doc,.docx,.txt" 
+                        className="hidden" 
+                      />
+
+                      {!resumeFile ? (
+                        <div
+                          onDragOver={handleDragOver}
+                          onDragLeave={handleDragLeave}
+                          onDrop={handleDrop}
+                          onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                          className={`border-2 border-dashed rounded-xl p-8 sm:p-12 text-center cursor-pointer transition-all ${
+                            isDragging 
+                              ? 'border-blue-600 bg-blue-50/50 scale-[1.01]' 
+                              : 'border-slate-300 hover:border-blue-500 bg-slate-50/50 hover:bg-blue-50/20'
+                          }`}
+                        >
+                          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-blue-600">
+                            <UploadCloudIcon className="w-8 h-8" />
+                          </div>
+                          <p className="text-base font-semibold text-slate-800 mb-1">
+                            Drag & drop your Resume (PDF or Word) or click to browse.
+                          </p>
+                          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                            Supports modern applicant tracking formatting (PDF recommended for exact layout preservation). Max 10MB.
+                          </p>
+                          <div className="mt-5 inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-blue-700 bg-white border border-slate-200 rounded-lg shadow-2xs hover:bg-slate-50">
+                            <span>Browse Files from Computer</span>
+                          </div>
+                        </div>
+                      ) : (
+                        /* Loaded File Card Preview */
+                        <div className="border border-slate-200 rounded-xl p-5 bg-gradient-to-br from-white to-slate-50">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-center gap-3.5">
+                              <div className="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm">
+                                <FileTextIcon className="w-6 h-6" />
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-bold text-slate-900 truncate max-w-[220px] sm:max-w-xs">
+                                  {resumeFile.name}
+                                </h4>
+                                <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                                  <span>{resumeFile.size}</span>
+                                  <span>•</span>
+                                  <span>{resumeFile.pages} pages</span>
+                                  <span>•</span>
+                                  <span className="text-emerald-600 font-medium">{resumeFile.lastModified}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={removeResume}
+                              className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                              title="Remove file"
+                            >
+                              <Trash2Icon className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          {/* Quick Document Excerpt Preview */}
+                          <div className="mt-4 p-3 bg-white rounded-lg border border-slate-100 text-[11px] font-mono text-slate-600 leading-relaxed max-h-24 overflow-y-auto">
+                            {resumeFile.text.slice(0, 260)}...
+                          </div>
+
+                          <div className="mt-3 flex items-center justify-between text-xs">
+                            <span className="text-slate-400">Parsed: Contact, Experience, Skills, Education</span>
+                            <button
+                              onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                              className="text-blue-600 font-semibold hover:underline cursor-pointer"
+                            >
+                              Replace File
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+                      <span>✓ Text extraction: Automated</span>
+                      <span>✓ OCR supported</span>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Job Description */}
+                  <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between transition-all hover:shadow-md">
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-indigo-100/70 text-indigo-700 flex items-center justify-center font-bold text-sm">
+                            2
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-slate-900">Job Description</h3>
+                            <p className="text-xs text-slate-500">Paste the target role specs</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-400">
+                            {jobDescription.length} characters
+                          </span>
+                          {jobDescription.trim().length > 0 && (
+                            <button
+                              onClick={() => setJobDescription("")}
+                              className="text-xs text-slate-400 hover:text-slate-700 hover:underline"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Textarea */}
+                      <div className="relative">
+                        <textarea
+                          rows={8}
+                          value={jobDescription}
+                          onChange={(e) => setJobDescription(e.target.value)}
+                          placeholder="Paste the target job description here (Role overview, key requirements, technical qualifications, responsibilities)..."
+                          className="w-full p-4 rounded-xl border border-slate-200 bg-slate-50/40 text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all text-sm leading-relaxed font-sans resize-none"
+                        ></textarea>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+                      <span>Tip: Include the full "Requirements" section for 99% accuracy</span>
+                      <button
+                        onClick={() => setJobDescription(SAMPLE_JOB_DESC)}
+                        className="text-blue-600 font-semibold hover:underline cursor-pointer"
+                      >
+                        Insert Demo Job Spec
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Primary Call to Action Button */}
+                <div className="mt-10 flex flex-col items-center justify-center">
+                  <button
+                    onClick={runAnalysis}
+                    disabled={isAnalyzing}
+                    className={`group relative inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl text-base font-bold text-white shadow-xl transition-all duration-200 cursor-pointer ${
+                      isAnalyzing 
+                        ? 'bg-slate-700 cursor-not-allowed opacity-90' 
+                        : 'bg-gradient-to-r from-slate-900 via-blue-900 to-blue-700 hover:from-slate-800 hover:to-blue-600 hover:shadow-blue-500/25 hover:-translate-y-0.5 active:translate-y-0'
+                    }`}
+                  >
+                    {isAnalyzing ? (
+                      <RefreshCwIcon className="w-5 h-5 animate-spin text-blue-300" />
+                    ) : (
+                      <SparklesIcon className="w-5 h-5 text-blue-300 group-hover:rotate-12 transition-transform" />
+                    )}
+                    <span>{isAnalyzing ? "Analyzing Match Vectors..." : "Analyze Resume"}</span>
+                    {!isAnalyzing && (
+                      <ArrowRightIcon className="w-4 h-4 opacity-70 group-hover:translate-x-1 transition-transform" />
+                    )}
+                  </button>
+
+                  {/* Interactive Loading State Simulation */}
+                  {isAnalyzing && (
+                    <div className="w-full max-w-md mt-6 p-5 bg-white rounded-xl border border-blue-200 shadow-md animate-fade-in">
+                      <div className="flex items-center justify-between text-xs font-semibold text-slate-700 mb-2">
+                        <span className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-blue-600 animate-ping" />
+                          AI is analyzing your profile...
+                        </span>
+                        <span className="text-blue-600">{analyzeProgress}%</span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-300 ease-out"
+                          style={{ width: `${analyzeProgress}%` }}
+                        />
+                      </div>
+
+                      <p className="mt-2.5 text-xs text-slate-500 text-center italic">
+                        {statusStep}
+                      </p>
+                    </div>
+                  )}
+
+                  {!isAnalyzing && (
+                    <p className="mt-3 text-xs text-slate-500 flex items-center gap-1.5">
+                      <ShieldCheckIcon className="w-3.5 h-3.5 text-emerald-600" />
+                      Free audit • Scans 24 core ATS criteria • Results ready in &lt; 2 seconds
+                    </p>
+                  )}
+                </div>
+
+              </div>
+            </section>
+
+            {/* 4. Results Dashboard (Mock Output Section) */}
+            {showResults && (
+              <section 
+                id="results-section" 
+                ref={resultsRef} 
+                className="py-16 bg-white border-t border-slate-200"
+              >
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                  
+                  {/* Dashboard Header Bar */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-8 border-b border-slate-200 gap-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
+                          Audit Complete
+                        </span>
+                        <span className="text-xs text-slate-400">Target Role: Senior Frontend Engineer</span>
+                      </div>
+                      <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
+                        ATS Compatibility Dashboard
+                      </h2>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => {
+                          runAnalysis();
+                        }}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg shadow-2xs transition-colors cursor-pointer"
+                      >
+                        <RefreshCwIcon className="w-3.5 h-3.5 text-slate-500" />
+                        <span>Re-Analyze</span>
+                      </button>
+
+                      <button
+                        onClick={() => setActiveModal('export')}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors cursor-pointer"
+                      >
+                        <DownloadIcon className="w-3.5 h-3.5 text-blue-200" />
+                        <span>Export Full Report</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Top Overview: Match Score Gauge & Candidate Fit Summary Card */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10 items-stretch">
+                    
+                    {/* Match Score Card (4 Cols on LG) */}
+                    <div className="lg:col-span-5 bg-gradient-to-b from-white to-slate-50/80 rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-8 flex flex-col items-center justify-center text-center relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-100/40 rounded-full blur-2xl pointer-events-none" />
+
+                      <div className="w-full flex items-center justify-between mb-4">
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Overall Match</span>
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                          <CheckCircleIcon className="w-3 h-3" /> High Match
+                        </span>
+                      </div>
+
+                      {/* Circular Progress Gauge */}
+                      <div className="relative w-48 h-48 my-2 flex items-center justify-center">
+                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
+                          {/* Background Ring */}
+                          <circle
+                            cx="60"
+                            cy="60"
+                            r="50"
+                            stroke="#e2e8f0"
+                            strokeWidth="10"
+                            fill="transparent"
+                          />
+                          {/* Animated Progress Ring (82% => circumference ~ 314.15; offset = 314.15 * (1 - 0.82) = 56.5) */}
+                          <circle
+                            cx="60"
+                            cy="60"
+                            r="50"
+                            stroke="url(#scoreGradient)"
+                            strokeWidth="10"
+                            strokeDasharray="314.15"
+                            strokeDashoffset="56.5"
+                            strokeLinecap="round"
+                            fill="transparent"
+                            className="transition-all duration-1000 ease-out"
+                          />
+                          <defs>
+                            <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" stopColor="#10b981" />
+                              <stop offset="100%" stopColor="#059669" />
+                            </linearGradient>
+                          </defs>
+                        </svg>
+
+                        {/* Center Display */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                          <span className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight">82%</span>
+                          <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest mt-0.5">Match</span>
+                        </div>
+                      </div>
+
+                      {/* Score Breakdown Pills */}
+                      <div className="w-full grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-slate-200 text-center">
+                        <div className="p-2 rounded-lg bg-white border border-slate-100 shadow-2xs">
+                          <div className="text-[10px] text-slate-400 uppercase font-semibold">Skills</div>
+                          <div className="text-sm font-bold text-slate-800">88%</div>
+                        </div>
+                        <div className="p-2 rounded-lg bg-white border border-slate-100 shadow-2xs">
+                          <div className="text-[10px] text-slate-400 uppercase font-semibold">Format</div>
+                          <div className="text-sm font-bold text-emerald-600">95%</div>
+                        </div>
+                        <div className="p-2 rounded-lg bg-white border border-slate-100 shadow-2xs">
+                          <div className="text-[10px] text-slate-400 uppercase font-semibold">Impact</div>
+                          <div className="text-sm font-bold text-amber-600">72%</div>
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-slate-500 mt-3">
+                        Benchmark: ATS pass threshold is typically <span className="font-semibold text-slate-700">75%</span>.
+                      </p>
+                    </div>
+
+                    {/* Summary Card (7 Cols on LG) */}
+                    <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-8 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                              <WandIcon className="w-4 h-4" />
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-900">Executive Fit Summary</h3>
+                          </div>
+                          <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">
+                            High Interview Likelihood
+                          </span>
+                        </div>
+
+                        {/* Short paragraph summarizing candidate fit */}
+                        <p className="text-slate-600 text-sm sm:text-base leading-relaxed mb-6">
+                          Your profile demonstrates an exceptional match for this <strong className="text-slate-900 font-semibold">Senior Frontend Engineer</strong> role. You have strong keyword alignment across core React ecosystem competencies, state management, and modern component workflows. To cross the <strong className="text-emerald-700 font-semibold">90%+ top-decile threshold</strong>, weave in missing DevOps/Cloud keywords (<span className="text-rose-600 font-medium">Docker, AWS</span>) and quantify metrics in your recent achievements.
+                        </p>
+
+                        {/* Key Fast Stats Badges */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                            <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                              <CheckCircleIcon className="w-4 h-4 text-emerald-600" />
+                              <span className="font-medium">Matched Keywords</span>
+                            </div>
+                            <div className="text-lg font-extrabold text-slate-900">14 <span className="text-xs font-normal text-slate-500">of 17 found</span></div>
+                          </div>
+
+                          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                            <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                              <ShieldCheckIcon className="w-4 h-4 text-blue-600" />
+                              <span className="font-medium">ATS Pass Rate</span>
+                            </div>
+                            <div className="text-lg font-extrabold text-slate-900">89% <span className="text-xs font-normal text-emerald-600 font-semibold">↑ High</span></div>
+                          </div>
+
+                          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                            <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                              <StarIcon className="w-4 h-4 text-amber-500" />
+                              <span className="font-medium">Formatting Grade</span>
+                            </div>
+                            <div className="text-lg font-extrabold text-slate-900">A <span className="text-xs font-normal text-slate-500">Zero Parsing Errors</span></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                        <span>Analyzed against 3 core ATS engines: Workday, Lever, Greenhouse</span>
+                        <span className="text-emerald-600 font-semibold">No critical blockers found</span>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Section Title for Three Column Grid */}
+                  <div className="mb-6">
+                    <h3 className="text-xl font-bold text-slate-900 tracking-tight">
+                      Detailed ATS Breakdown
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      Granular inspection across skills presence, missing job requirements, and formatting compliance.
+                    </p>
+                  </div>
+
+                  {/* Three-Column Grid for Metrics: Strengths, Missing Keywords, Formatting */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 items-stretch">
+                    
+                    {/* Column 1: Strengths (Green Checkmark List) */}
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between hover:border-emerald-300 transition-colors">
+                      <div>
+                        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                              <CheckCircleIcon className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-slate-900">Strengths</h4>
+                              <p className="text-xs text-emerald-600 font-medium">9 matched critical skills</p>
+                            </div>
+                          </div>
+                          <span className="px-2 py-0.5 text-xs font-bold bg-emerald-100 text-emerald-800 rounded-full">
+                            92%
+                          </span>
+                        </div>
+
+                        {/* Skills List */}
+                        <ul className="space-y-3">
+                          {[
+                            { name: "React & React Hooks", context: "Found 6x in experience & summary" },
+                            { name: "TypeScript / JavaScript ES6+", context: "Found 4x across projects" },
+                            { name: "Tailwind CSS & Styling", context: "Component library architecture" },
+                            { name: "Redux Toolkit / State", context: "Matches target requirement" },
+                            { name: "Agile / Scrum Methodologies", context: "Sprint planning experience" },
+                            { name: "Next.js & Modern Tooling", context: "Vite, Next.js highlighted" },
+                            { name: "Unit Testing (Jest)", context: "85% coverage cited" },
+                            { name: "REST & GraphQL APIs", context: "Full-stack integration confirmed" },
+                          ].map((item, idx) => (
+                            <li key={idx} className="flex items-start gap-2.5 text-sm">
+                              <div className="mt-0.5 text-emerald-600 shrink-0">
+                                <CheckCircleIcon className="w-4 h-4" />
+                              </div>
+                              <div className="flex-1">
+                                <span className="font-semibold text-slate-800">{item.name}</span>
+                                <p className="text-[11px] text-slate-400">{item.context}</p>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="mt-6 pt-3 border-t border-slate-100 text-xs text-emerald-700 bg-emerald-50/50 p-2.5 rounded-lg flex items-center gap-1.5">
+                        <CheckIcon className="w-4 h-4 text-emerald-600" />
+                        <span>Core frontend stack perfectly aligned!</span>
+                      </div>
+                    </div>
+
+                    {/* Column 2: Missing Keywords (Red "X" List) */}
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between hover:border-rose-300 transition-colors">
+                      <div>
+                        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
+                              <XCircleIcon className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-slate-900">Missing Keywords</h4>
+                              <p className="text-xs text-rose-600 font-medium">Keywords absent from resume</p>
+                            </div>
+                          </div>
+                          <span className="px-2 py-0.5 text-xs font-bold bg-rose-100 text-rose-800 rounded-full">
+                            3 Missing
+                          </span>
+                        </div>
+
+                        {/* Missing Skills List */}
+                        <ul className="space-y-3">
+                          {[
+                            { name: "Docker", impact: "High Priority", note: "Appears in job's containerization reqs" },
+                            { name: "AWS (S3, CloudFront, ECS)", impact: "High Priority", note: "Cloud deployment requirement" },
+                            { name: "Micro-frontends", impact: "Medium Priority", note: "Listed as preferred architecture" },
+                            { name: "Cypress / E2E Testing", impact: "Medium Priority", note: "Target job lists Cypress for QA" },
+                            { name: "Fintech / Payments Domain", impact: "Bonus Context", note: "Helps position candidate domain fit" },
+                          ].map((item, idx) => (
+                            <li key={idx} className="flex items-start gap-2.5 text-sm">
+                              <div className="mt-0.5 text-rose-500 shrink-0">
+                                <XCircleIcon className="w-4 h-4" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-semibold text-slate-800">{item.name}</span>
+                                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+                                    item.impact.includes("High") 
+                                      ? "bg-rose-100 text-rose-700" 
+                                      : "bg-amber-100 text-amber-800"
+                                  }`}>
+                                    {item.impact}
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-slate-400">{item.note}</p>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="mt-6 pt-3 border-t border-slate-100 text-xs text-rose-700 bg-rose-50/60 p-2.5 rounded-lg flex items-center gap-1.5">
+                        <AlertCircleIcon className="w-4 h-4 text-rose-500 shrink-0" />
+                        <span>Add Docker & AWS to bump score to 91%</span>
+                      </div>
+                    </div>
+
+                    {/* Column 3: Formatting (ATS Readability Highlights) */}
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between hover:border-blue-300 transition-colors">
+                      <div>
+                        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                              <ShieldCheckIcon className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-slate-900">Formatting Audit</h4>
+                              <p className="text-xs text-blue-600 font-medium">ATS parsing readability</p>
+                            </div>
+                          </div>
+                          <span className="px-2 py-0.5 text-xs font-bold bg-blue-100 text-blue-800 rounded-full">
+                            Pass (6/6)
+                          </span>
+                        </div>
+
+                        {/* Formatting items */}
+                        <ul className="space-y-3">
+                          {[
+                            { title: "Standard Headings Detected", desc: "Recognized 'Experience', 'Education', 'Skills'", status: "Pass" },
+                            { title: "No Complex Tables Found", desc: "ATS parsers read left-to-right cleanly", status: "Pass" },
+                            { title: "Single Column Hierarchy", desc: "Ensures no text scrambling during indexing", status: "Pass" },
+                            { title: "Standard Typography", desc: "No unreadable custom font glyphs", status: "Pass" },
+                            { title: "Contact Data Extracted", desc: "Email, Phone, City, LinkedIn identified", status: "Pass" },
+                            { title: "File Encoding UTF-8", desc: "No corrupted ligature characters", status: "Pass" },
+                          ].map((item, idx) => (
+                            <li key={idx} className="flex items-start gap-2.5 text-sm">
+                              <div className="mt-0.5 text-emerald-600 shrink-0">
+                                <CheckIcon className="w-4 h-4" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-semibold text-slate-800">{item.title}</span>
+                                  <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                                    {item.status}
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-slate-400">{item.desc}</p>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="mt-6 pt-3 border-t border-slate-100 text-xs text-blue-700 bg-blue-50/60 p-2.5 rounded-lg flex items-center gap-1.5">
+                        <InfoIcon className="w-4 h-4 text-blue-600 shrink-0" />
+                        <span>ATS Parser compatibility rating: 100%</span>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Feedback Section (Bullet Point Suggestions) */}
+                  <div className="bg-gradient-to-br from-slate-900 to-blue-950 rounded-2xl shadow-xl text-white p-6 sm:p-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800 mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-blue-600/30 border border-blue-500/40 text-blue-400 flex items-center justify-center">
+                          <WandIcon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-white tracking-tight">
+                            AI Bullet Point Rewriter & Feedback
+                          </h3>
+                          <p className="text-xs text-blue-200">
+                            Quantify impact and inject high-scoring action verbs to lift match score by +12%.
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 self-start sm:self-auto">
+                        3 High-Impact Suggestions
+                      </span>
+                    </div>
+
+                    {/* Suggestions Cards List */}
+                    <div className="space-y-4">
+                      
+                      {/* Suggestion 1 */}
+                      <div className="bg-slate-800/80 rounded-xl p-5 border border-slate-700 hover:border-slate-600 transition-all">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                          <span className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                            <AlertCircleIcon className="w-3.5 h-3.5" /> Suggestion 1: Quantify Leadership & Velocity
+                          </span>
+                          <span className="text-[11px] text-slate-400">Section: Senior Frontend Developer (TechNova)</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
+                          {/* Original Bullet */}
+                          <div className="p-3.5 rounded-lg bg-slate-900/90 border border-rose-900/40 text-xs">
+                            <div className="text-[10px] font-bold text-rose-400 uppercase tracking-wider mb-1">
+                              Original Bullet (Low Impact)
+                            </div>
+                            <p className="text-slate-300 line-through decoration-rose-500/60 font-mono">
+                              "Led team of developers building responsive dashboard web applications using React, Next.js, and Redux Toolkit."
+                            </p>
+                          </div>
+
+                          {/* AI-Optimized Bullet */}
+                          <div className="p-3.5 rounded-lg bg-blue-950/70 border border-emerald-500/50 text-xs relative group">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+                                Recommended ATS Rewrite (+8 pts)
+                              </span>
+                              <button
+                                onClick={() => copyBullet("Architected and led a team of 7 engineers to build mission-critical enterprise React dashboards, boosting sprint velocity by 32% and serving 140k+ daily active users.", "b1")}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 font-semibold text-[11px] transition-colors cursor-pointer"
+                                title="Copy to clipboard"
+                              >
+                                <CopyIcon className="w-3 h-3" /> Copy
+                              </button>
+                            </div>
+                            <p className="text-emerald-100 font-mono">
+                              "Architected and led a team of 7 engineers to build mission-critical enterprise React dashboards, boosting sprint velocity by 32% and serving 140k+ daily active users."
+                            </p>
+                          </div>
+                        </div>
+
+                        <p className="mt-2.5 text-xs text-slate-400 italic">
+                          Why: Quantifying team size (7 engineers) and metric outcome (32% velocity, 140k users) proves senior leadership.
+                        </p>
+                      </div>
+
+                      {/* Suggestion 2 */}
+                      <div className="bg-slate-800/80 rounded-xl p-5 border border-slate-700 hover:border-slate-600 transition-all">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                          <span className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                            <AlertCircleIcon className="w-3.5 h-3.5" /> Suggestion 2: Specify Performance Metrics & Core Web Vitals
+                          </span>
+                          <span className="text-[11px] text-slate-400">Section: Performance & Optimization</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
+                          {/* Original Bullet */}
+                          <div className="p-3.5 rounded-lg bg-slate-900/90 border border-rose-900/40 text-xs">
+                            <div className="text-[10px] font-bold text-rose-400 uppercase tracking-wider mb-1">
+                              Original Bullet (Low Impact)
+                            </div>
+                            <p className="text-slate-300 line-through decoration-rose-500/60 font-mono">
+                              "Improved application performance by optimizing re-renders and code-splitting, speeding up load times."
+                            </p>
+                          </div>
+
+                          {/* AI-Optimized Bullet */}
+                          <div className="p-3.5 rounded-lg bg-blue-950/70 border border-emerald-500/50 text-xs relative group">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+                                Recommended ATS Rewrite (+6 pts)
+                              </span>
+                              <button
+                                onClick={() => copyBullet("Optimized client-side rendering and bundle code-splitting across Next.js routes, slashing Largest Contentful Paint (LCP) by 45% and reducing bundle size by 1.2MB.", "b2")}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 font-semibold text-[11px] transition-colors cursor-pointer"
+                                title="Copy to clipboard"
+                              >
+                                <CopyIcon className="w-3 h-3" /> Copy
+                              </button>
+                            </div>
+                            <p className="text-emerald-100 font-mono">
+                              "Optimized client-side rendering and bundle code-splitting across Next.js routes, slashing Largest Contentful Paint (LCP) by 45% and reducing bundle size by 1.2MB."
+                            </p>
+                          </div>
+                        </div>
+
+                        <p className="mt-2.5 text-xs text-slate-400 italic">
+                          Why: Incorporating Google Core Web Vitals (LCP) and exact megabytes demonstrates technical mastery expected by Stripe/Vercel.
+                        </p>
+                      </div>
+
+                      {/* Suggestion 3 */}
+                      <div className="bg-slate-800/80 rounded-xl p-5 border border-slate-700 hover:border-slate-600 transition-all">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                          <span className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                            <AlertCircleIcon className="w-3.5 h-3.5" /> Suggestion 3: Inject Target Cloud Keywords (Docker & AWS)
+                          </span>
+                          <span className="text-[11px] text-slate-400">Section: CI/CD & Deployment</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
+                          {/* Original Bullet */}
+                          <div className="p-3.5 rounded-lg bg-slate-900/90 border border-rose-900/40 text-xs">
+                            <div className="text-[10px] font-bold text-rose-400 uppercase tracking-wider mb-1">
+                              Missing Cloud Context
+                            </div>
+                            <p className="text-slate-300 line-through decoration-rose-500/60 font-mono">
+                              "Built reusable component library using Tailwind CSS and Storybook, increasing frontend team velocity."
+                            </p>
+                          </div>
+
+                          {/* AI-Optimized Bullet */}
+                          <div className="p-3.5 rounded-lg bg-blue-950/70 border border-emerald-500/50 text-xs relative group">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+                                Recommended ATS Rewrite (+7 pts)
+                              </span>
+                              <button
+                                onClick={() => copyBullet("Standardized a 40+ component design system using Tailwind CSS & Storybook, containerized with Docker and published to AWS S3/CloudFront for seamless CI/CD distribution.", "b3")}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 font-semibold text-[11px] transition-colors cursor-pointer"
+                                title="Copy to clipboard"
+                              >
+                                <CopyIcon className="w-3 h-3" /> Copy
+                              </button>
+                            </div>
+                            <p className="text-emerald-100 font-mono">
+                              "Standardized a 40+ component design system using Tailwind CSS & Storybook, containerized with Docker and published to AWS S3/CloudFront for seamless CI/CD distribution."
+                            </p>
+                          </div>
+                        </div>
+
+                        <p className="mt-2.5 text-xs text-slate-400 italic">
+                          Why: Directly incorporates both missing keywords (<strong className="text-white">Docker</strong> and <strong className="text-white">AWS S3/CloudFront</strong>) in an authentic engineering bullet.
+                        </p>
+                      </div>
+
+                    </div>
+                  </div>
+
+                </div>
+              </section>
+            )}
+          </main>
+
+          {/* 5. Footer */}
+          <footer className="bg-slate-900 text-slate-400 border-t border-slate-800 text-sm">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
+                {/* Brand */}
+                <div className="md:col-span-1">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white">
+                      <SparklesIcon className="w-4 h-4 text-blue-200" />
+                    </div>
+                    <span className="text-lg font-bold text-white tracking-tight">Resume<span className="text-blue-500">AI</span></span>
+                  </div>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    The enterprise ATS resume scanner trusted by 240,000+ engineers, product managers, and leaders worldwide.
+                  </p>
+                </div>
+
+                {/* Product Links */}
+                <div>
+                  <h5 className="font-semibold text-white text-xs uppercase tracking-wider mb-3">Product</h5>
+                  <ul className="space-y-2 text-xs">
+                    <li><button onClick={() => setActiveModal('howItWorks')} className="hover:text-white transition-colors cursor-pointer">ATS Keyword Checker</button></li>
+                    <li><button onClick={() => setActiveModal('howItWorks')} className="hover:text-white transition-colors cursor-pointer">Bullet Point Optimizer</button></li>
+                    <li><button onClick={() => setActiveModal('pricing')} className="hover:text-white transition-colors cursor-pointer">Executive Pricing</button></li>
+                    <li><a href="#results-section" className="hover:text-white transition-colors">Instant Score Preview</a></li>
+                  </ul>
+                </div>
+
+                {/* ATS Resources */}
+                <div>
+                  <h5 className="font-semibold text-white text-xs uppercase tracking-wider mb-3">ATS Systems</h5>
+                  <ul className="space-y-2 text-xs">
+                    <li><span className="hover:text-white transition-colors">Workday Compatibility</span></li>
+                    <li><span className="hover:text-white transition-colors">Greenhouse Scanner</span></li>
+                    <li><span className="hover:text-white transition-colors">Lever Parser</span></li>
+                    <li><span className="hover:text-white transition-colors">Taleo Guidelines</span></li>
+                  </ul>
+                </div>
+
+                {/* Legal & Trust */}
+                <div>
+                  <h5 className="font-semibold text-white text-xs uppercase tracking-wider mb-3">Legal & Trust</h5>
+                  <ul className="space-y-2 text-xs">
+                    <li><button onClick={() => showToast("Privacy Policy: Your uploaded resumes are processed in-memory and never sold or shared.", "info")} className="hover:text-white transition-colors cursor-pointer">Privacy Policy</button></li>
+                    <li><button onClick={() => showToast("Terms of Service: Service provided for career optimization purposes.", "info")} className="hover:text-white transition-colors cursor-pointer">Terms of Service</button></li>
+                    <li><span className="hover:text-white transition-colors">Security & SOC2 Type II</span></li>
+                    <li><span className="hover:text-white transition-colors">GDPR Compliant</span></li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+                <p>© 2026 ResumeAI Inc. All rights reserved. Beat the ATS. Land the Interview.</p>
+                <div className="flex items-center gap-6">
+                  <button onClick={() => showToast("Privacy Policy: 100% confidential resume analysis.")} className="hover:text-slate-300">Privacy Policy</button>
+                  <button onClick={() => showToast("Terms of Service: Standard career software terms apply.")} className="hover:text-slate-300">Terms of Service</button>
+                  <span className="text-slate-600">|</span>
+                  <span className="inline-flex items-center gap-1.5 text-emerald-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    All ATS Engines Operational
+                  </span>
+                </div>
+              </div>
+            </div>
+          </footer>
+
+          {/* --- Interactive Modals --- */}
+          
+          {/* How It Works Modal */}
+          {activeModal === 'howItWorks' && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+              <div className="bg-white rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200">
+                <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                      <SparklesIcon className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-900">How ResumeAI Beats the ATS</h3>
+                  </div>
+                  <button onClick={() => setActiveModal(null)} className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
+                    <XIcon className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="py-6 space-y-4">
+                  <div className="flex gap-4 items-start">
+                    <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</div>
+                    <div>
+                      <h4 className="font-semibold text-slate-900 text-sm">Semantic Keyword Vectoring</h4>
+                      <p className="text-xs text-slate-500 mt-1">Unlike basic word-counters, our AI identifies synonym concepts (e.g., recognizing that "React.js" fulfills "React framework" and "front-end architecture").</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 items-start">
+                    <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</div>
+                    <div>
+                      <h4 className="font-semibold text-slate-900 text-sm">Parser Parsing Simulation</h4>
+                      <p className="text-xs text-slate-500 mt-1">We run your resume through simulated parsers from Workday, Greenhouse, and Lever to verify headings, dates, and typography render without corruption.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 items-start">
+                    <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">3</div>
+                    <div>
+                      <h4 className="font-semibold text-slate-900 text-sm">Bullet Metric Scoring</h4>
+                      <p className="text-xs text-slate-500 mt-1">Recruiters spend 6 seconds reviewing shortlisted resumes. We rewrite your bullets with active verbs and business metrics to ensure you stand out.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 flex justify-end">
+                  <button 
+                    onClick={() => setActiveModal(null)} 
+                    className="px-5 py-2 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg cursor-pointer"
+                  >
+                    Got It, Let's Analyze
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Pricing Modal */}
+          {activeModal === 'pricing' && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+              <div className="bg-white rounded-2xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200">
+                <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900">Simple, Transparent Pricing</h3>
+                    <p className="text-xs text-slate-500">Invest in your career. Land interviews 3x faster.</p>
+                  </div>
+                  <button onClick={() => setActiveModal(null)} className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
+                    <XIcon className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6">
+                  {/* Free Tier */}
+                  <div className="p-5 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between">
+                    <div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Free Tier</span>
+                      <div className="text-3xl font-black text-slate-900 my-2">$0 <span className="text-xs font-normal text-slate-500">/ forever</span></div>
+                      <p className="text-xs text-slate-600 mb-4">Perfect for quick scans and checking basic compatibility.</p>
+                      <ul className="space-y-2 text-xs text-slate-700 mb-6">
+                        <li className="flex items-center gap-2"><CheckIcon className="w-4 h-4 text-emerald-600" /> 3 ATS Resume Scans per day</li>
+                        <li className="flex items-center gap-2"><CheckIcon className="w-4 h-4 text-emerald-600" /> Keyword match percentage</li>
+                        <li className="flex items-center gap-2"><CheckIcon className="w-4 h-4 text-emerald-600" /> Basic formatting check</li>
+                      </ul>
+                    </div>
+                    <button 
+                      onClick={() => { setActiveModal(null); showToast("You are currently using the Free Tier."); }} 
+                      className="w-full py-2 text-xs font-bold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-100"
+                    >
+                      Current Plan
+                    </button>
+                  </div>
+
+                  {/* Pro Plan */}
+                  <div className="p-5 rounded-xl border-2 border-blue-600 bg-gradient-to-b from-blue-50/50 to-white flex flex-col justify-between relative shadow-md">
+                    <span className="absolute -top-3 right-4 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide bg-blue-600 text-white rounded-full">
+                      Most Popular
+                    </span>
+                    <div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-blue-700">Pro Career Pass</span>
+                      <div className="text-3xl font-black text-slate-900 my-2">$19 <span className="text-xs font-normal text-slate-500">/ month</span></div>
+                      <p className="text-xs text-slate-600 mb-4">Unlimited scans, AI bullet rewriting, and PDF export.</p>
+                      <ul className="space-y-2 text-xs text-slate-700 mb-6">
+                        <li className="flex items-center gap-2"><CheckIcon className="w-4 h-4 text-blue-600" /> Unlimited ATS scans & job matches</li>
+                        <li className="flex items-center gap-2"><CheckIcon className="w-4 h-4 text-blue-600" /> AI Bullet Point Rewriter with metrics</li>
+                        <li className="flex items-center gap-2"><CheckIcon className="w-4 h-4 text-blue-600" /> Export branded PDF ATS audit report</li>
+                        <li className="flex items-center gap-2"><CheckIcon className="w-4 h-4 text-blue-600" /> Workday & Greenhouse deep diagnostics</li>
+                      </ul>
+                    </div>
+                    <button 
+                      onClick={() => { setActiveModal(null); showToast("Pro subscription activated for demo!"); }} 
+                      className="w-full py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm"
+                    >
+                      Upgrade to Pro
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Sign In Modal */}
+          {activeModal === 'signIn' && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+              <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 text-center">
+                <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 mx-auto flex items-center justify-center mb-3">
+                  <SparklesIcon className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900">Welcome to ResumeAI</h3>
+                <p className="text-xs text-slate-500 mt-1 mb-6">Sign in to save your audit history and unlock unlimited ATS scans.</p>
+
+                <div className="space-y-3">
+                  <button 
+                    onClick={() => { setActiveModal(null); showToast("Signed in successfully as Demo User!"); }}
+                    className="w-full py-2.5 px-4 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                    <span>Continue with Google</span>
+                  </button>
+
+                  <button 
+                    onClick={() => { setActiveModal(null); showToast("Signed in successfully with GitHub!"); }}
+                    className="w-full py-2.5 px-4 text-xs font-semibold text-white bg-slate-900 rounded-lg hover:bg-slate-800 flex items-center justify-center gap-2"
+                  >
+                    <span>Continue with GitHub</span>
+                  </button>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-slate-100">
+                  <button 
+                    onClick={() => setActiveModal(null)} 
+                    className="text-xs text-slate-400 hover:text-slate-600"
+                  >
+                    Continue as Guest
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Export Report Modal */}
+          {activeModal === 'export' && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+              <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <DownloadIcon className="w-5 h-5 text-blue-600" />
+                    <h3 className="font-bold text-slate-900 text-base">Export ATS Audit Report</h3>
+                  </div>
+                  <button onClick={() => setActiveModal(null)} className="p-1 text-slate-400 hover:text-slate-700">
+                    <XIcon className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="py-4 space-y-3 text-xs text-slate-600">
+                  <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="font-bold text-slate-800 mb-1">ResumeAI Comprehensive Audit Summary</div>
+                    <div>Candidate: Alex Rivera • Target: Senior Frontend Engineer</div>
+                    <div className="font-semibold text-emerald-700 mt-1">Score: 82% (High ATS Compatibility)</div>
+                  </div>
+                  <p>Included in report:</p>
+                  <ul className="space-y-1 list-disc list-inside text-slate-500">
+                    <li>Complete keyword density comparison</li>
+                    <li>6-point ATS formatting audit breakdown</li>
+                    <li>3 prioritized AI bullet point rewrites</li>
+                    <li>Workday & Greenhouse parsing validation checklist</li>
+                  </ul>
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
+                  <button 
+                    onClick={() => setActiveModal(null)} 
+                    className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setActiveModal(null);
+                      window.print();
+                    }} 
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm"
+                  >
+                    <DownloadIcon className="w-3.5 h-3.5" />
+                    <span>Download / Print PDF</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    // Mount React App
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
